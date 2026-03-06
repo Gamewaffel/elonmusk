@@ -2,194 +2,158 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warp-Flug: Elon Musks Vermögen</title>
+    <title>Elon's Money Beam: London to Paris</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            /* Ein dunkler Space-Hintergrund mit leichtem Lila/Blau für mehr Tiefe */
-            background: radial-gradient(circle at center, #0a001a 0%, #000000 100%);
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #111;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
             overflow-x: hidden;
-            /* Extrem lang, damit der Weg zu den Milliarden weh tut */
-            height: 40000px; 
+            height: 40000px; /* Extrem langer Scrollweg für die Reise */
         }
 
-        #scene {
+        #viewport {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            /* Standard-Perspektive */
-            perspective: 600px;
-            overflow: hidden;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            perspective: 1200px;
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: perspective 0.2s ease-out; /* Für den Zoom-Out/Warp-Effekt */
+            background: linear-gradient(to bottom, #001f3f 0%, #000 100%);
         }
 
-        #world {
+        /* Der endlose Stapel aus 100€ Scheinen */
+        #money-beam {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            width: 80px; /* Breite des Stapels */
+            height: 80px;
+            background: #27ae60;
+            box-shadow: 0 0 40px #2ecc71;
             transform-style: preserve-3d;
+            /* Textur für die gestapelten Scheine */
+            background-image: repeating-linear-gradient(
+                90deg,
+                #145a32 0px, #145a32 1px,
+                #27ae60 1px, #27ae60 2px
+            );
         }
 
-        /* Glühende Geld/Daten-Partikel */
-        .particle {
+        /* Landschaftselemente */
+        .scenery {
             position: absolute;
-            background-color: #00ff66;
-            box-shadow: 0 0 15px #00ff66, 0 0 30px #00ff66;
-            border-radius: 50%;
-            opacity: 0.8;
+            font-size: 100px;
+            transform: translateZ(0);
         }
 
-        /* Die Text-Meilensteine */
-        .milestone {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 900px;
-            padding: 40px;
-            background: rgba(10, 0, 26, 0.6);
-            border: 1px solid rgba(0, 255, 102, 0.3);
-            border-radius: 15px;
-            box-shadow: 0 0 50px rgba(0, 255, 102, 0.1);
-            backdrop-filter: blur(5px);
-        }
-
-        .milestone h2 {
-            font-size: 4rem;
-            margin: 0 0 10px 0;
-            color: #00ff66;
-            text-shadow: 0 0 20px #00ff66, 0 0 40px #00ff66;
-            letter-spacing: 2px;
-        }
-
-        .milestone p {
-            font-size: 1.8rem;
-            color: #e0e0e0;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        #ui {
+        #dashboard {
             position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.8);
-            padding: 15px 30px;
-            border-radius: 30px;
-            border: 1px solid #00ff66;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.3);
+            top: 20px; left: 20px;
+            background: rgba(0,0,0,0.9);
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #2ecc71;
             z-index: 100;
-            text-align: center;
-            font-size: 1.2rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        }
+
+        .stat { font-size: 1.2rem; margin-bottom: 5px; }
+        .val { color: #2ecc71; font-weight: bold; font-family: monospace; }
+
+        #progress-container {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%; height: 10px;
+            background: #222;
+        }
+        #progress-bar {
+            height: 100%; width: 0%; background: #2ecc71;
+            box-shadow: 0 0 20px #2ecc71;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui">
-        Warp-Antrieb aktiv: Scrollen ↓<br>
-        <span id="progress" style="color: #00ff66; font-weight: bold; font-size: 1.5rem;">0 %</span>
+    <div id="progress-container"><div id="progress-bar"></div></div>
+
+    <div id="dashboard">
+        <div class="stat">Distanz ab London: <span id="dist" class="val">0 km</span></div>
+        <div class="stat">Wert des Stapels: <span id="money" class="val">0 €</span></div>
+        <div class="stat">Ort: <span id="loc" class="val">London</span></div>
+        <div style="margin-top:10px; font-size:0.8rem; color:#888;">
+            Horizontaler Stapel aus 100€ Scheinen (0.1mm Dicke).
+        </div>
     </div>
 
-    <div id="scene">
-        <div id="world"></div>
+    <div id="viewport">
+        <div id="money-beam"></div>
     </div>
 
     <script>
-        const scene = document.getElementById('scene');
-        const world = document.getElementById('world');
-        const progressText = document.getElementById('progress');
-        const totalScrollHeight = document.body.scrollHeight - window.innerHeight;
+        const beam = document.getElementById('money-beam');
+        const distText = document.getElementById('dist');
+        const moneyText = document.getElementById('money');
+        const locText = document.getElementById('loc');
+        const progressBar = document.getElementById('progress-bar');
 
-        // Der Multiplikator für die Z-Achse. Wir machen es schnell!
-        const zSpeed = 4; 
+        // 1 km Stapel = 10.000.000 Scheine à 100€ = 1 Milliarde €
+        const moneyPerKm = 1000000000;
+        const totalDistanceKm = 344; // London nach Paris
 
-        // Die neuen Meilensteine mit extremen Z-Distanzen
-        // Um das Verhältnis zu zeigen, sind die Lücken am Ende gigantisch.
-        const milestones = [
-            { z: -500, title: "$0", desc: "Startpunkt. Hier stehen die meisten von uns am Anfang." },
-            { z: -1500, title: "~ $50.000", desc: "Durchschnittliches Jahreseinkommen in Deutschland (ca. 45.000 €)." },
-            { z: -4000, title: "$2.5 Millionen", desc: "Das Lebensarbeitseinkommen eines durchschnittlichen Akademikers." },
-            { z: -10000, title: "$100 Millionen", desc: "Ein weltberühmter Hollywood-Star oder Top-Fußballer." },
-            { z: -25000, title: "$1 Milliarde", desc: "Willkommen im Komma-Club. Ein Einhorn-Startup." },
-            { z: -45000, title: "$10 Milliarden", desc: "Die Baukosten des James-Webb-Weltraumteleskops." },
-            { z: -75000, title: "$44 Milliarden", desc: "Der Kaufpreis für Twitter (X)." },
-            { z: -110000, title: "$100 Milliarden", desc: "Das Bruttoinlandsprodukt (BIP) vieler kleinerer Staaten." },
-            { z: -150000, title: "$250+ Milliarden", desc: "Elon Musk. Der Wahnsinn hat ein Ende. Glückwunsch zum Muskelkater im Finger." }
+        // Objekte in der Landschaft
+        const features = [
+            { d: 0, n: "London (Big Ben)", e: "🏛️" },
+            { d: 50, n: "Englische Landschaft", e: "🌳" },
+            { d: 110, n: "Ärmelkanal (Küste)", e: "🌊" },
+            { d: 150, n: "Mitten im Meer", e: "🚢" },
+            { d: 210, n: "Französische Küste", e: "🇫🇷" },
+            { d: 235, n: "ELONS GELD ENDE", e: "🛑" },
+            { d: 344, n: "Paris (Eiffelturm)", e: "🗼" }
         ];
 
-        // Meilensteine in die Welt rendern
-        milestones.forEach(ms => {
+        features.forEach(f => {
             const el = document.createElement('div');
-            el.className = 'milestone';
-            el.innerHTML = `<h2>${ms.title}</h2><p>${ms.desc}</p>`;
-            el.style.transform = `translate(-50%, -50%) translateZ(${ms.z}px)`;
-            world.appendChild(el);
+            el.className = 'scenery';
+            el.innerHTML = `<div style="font-size:15px; background:black; padding:2px;">${f.n}</div>${f.e}`;
+            el.style.left = "50%";
+            el.style.top = (Math.random() > 0.5 ? "20%" : "70%");
+            // Wir nutzen Z für die Distanz in der Tiefe
+            el.style.transform = `translate3d(${(Math.random()-0.5)*800}px, 0, ${-f.d * 100}px)`;
+            document.getElementById('viewport').appendChild(el);
         });
 
-        // 1500 leuchtende Partikel für den Hyperdrive-Effekt
-        const particleCount = 1500;
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.className = 'particle';
-            
-            // Variierende Größen für Tiefe
-            const size = Math.random() * 4 + 1;
-            particle.style.width = `${size}px`;
-            particle.style.height = `${size}px`;
-            
-            // X und Y extrem weit gestreut für den weiten Raum
-            const x = (Math.random() - 0.5) * 6000;
-            const y = (Math.random() - 0.5) * 4000;
-            // Z über die gesamte Länge der Strecke verteilt (bis weit hinter Elon Musk)
-            const z = (Math.random() * -160000); 
-
-            particle.style.transform = `translate3d(${x}px, ${y}px, ${z}px)`;
-            world.appendChild(particle);
-        }
-
-        // Variablen für den Zoom-Out-Effekt beim schnellen Scrollen
-        let lastScrollY = window.scrollY;
-        let scrollTimeout;
-
         window.addEventListener('scroll', () => {
-            const currentScrollY = window.scrollY;
+            const y = window.scrollY;
+            const currentKm = (y / 40000) * totalDistanceKm;
+            const currentMoney = currentKm * moneyPerKm;
+
+            // Den Geldstrahl auf uns zu bewegen
+            // Wir bewegen die gesamte Szene in Z-Richtung
+            const zMove = currentKm * 100;
+            beam.style.transform = `translateZ(${zMove}px) scaleX(1) scaleY(1)`;
             
-            // Geschwindigkeit berechnen
-            const speed = Math.abs(currentScrollY - lastScrollY);
-            lastScrollY = currentScrollY;
+            // Alle Landschaftsobjekte mitbewegen
+            document.querySelectorAll('.scenery').forEach((s, index) => {
+                const f = features[index] || {d: 0};
+                const depth = (-f.d * 100) + zMove;
+                s.style.transform = `translate3d(${(index%2==0?200:-200)}px, ${(index%3==0?100:-100)}px, ${depth}px)`;
+                s.style.opacity = depth > 500 ? 0 : 1; // Ausblenden wenn vorbei
+            });
 
-            // Kamerafahrt (Z-Verschiebung)
-            const zMove = currentScrollY * zSpeed;
-            world.style.transform = `translateZ(${zMove}px)`;
+            distText.innerText = currentKm.toFixed(2) + " km";
+            moneyText.innerText = currentMoney.toLocaleString('de-DE') + " €";
+            
+            if(currentKm >= 235 && currentKm < 340) {
+                locText.innerText = "Geld reicht nicht bis Paris!";
+                locText.style.color = "red";
+            } else if (currentKm >= 344) {
+                locText.innerText = "Ziel: Paris erreicht";
+            } else {
+                locText.innerText = currentKm < 110 ? "England" : "Über dem Meer";
+                locText.style.color = "#2ecc71";
+            }
 
-            // Dynamischer Zoom-Out (Perspektive ändert sich je nach Scroll-Geschwindigkeit)
-            // Basis ist 600px. Je schneller, desto extremer der Winkel.
-            const newPerspective = 600 + (speed * 5); 
-            scene.style.perspective = `${Math.min(newPerspective, 1500)}px`;
-
-            // Perspektive wieder normalisieren, wenn man aufhört zu scrollen
-            clearTimeout(scrollTimeout);
-            scrollTimeout = setTimeout(() => {
-                scene.style.perspective = '600px';
-            }, 100);
-
-            // Fortschrittsbalken aktualisieren
-            const percent = Math.min(100, Math.max(0, (currentScrollY / totalScrollHeight) * 100));
-            progressText.innerText = percent.toFixed(1) + ' %';
+            progressBar.style.width = (currentKm / totalDistanceKm * 100) + "%";
         });
     </script>
 </body>
